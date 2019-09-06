@@ -4,8 +4,8 @@ import sys, math, os
 import serial
 import argparse
 
-#url = "socket://localhost:7000"
-url = "/dev/tty.UC-232AC"
+url = "socket://localhost:7000"
+#url = "/dev/tty.UC-232AC"
 
 SOH = 1
 ACK = 6
@@ -16,13 +16,16 @@ class JModemSender:
         self.serial = serial
     
     def send( self, file, name, size ):
-        self.paknum, self.totalpaks = 0, math.ceil( size/128 )
+        first_packet_sent = False
+
         while file.peek():
-            packet = self.make_packet( file )
-            packet_enc = bytes( packet )
-            print( "Sending packet {}/{}".format( packet[1], self.totalpaks ))
+            if not first_packet_sent:
+                packet = self.make_first_packet( name, size )
+                first_packet_sent = True
+            else:
+                packet = self.make_packet( file )
             while True:
-                self.serial.write( packet_enc )
+                self.serial.write( bytes( packet ) )
                 response = self.serial.read( 1 )[0]
                 if response == ACK:
                     break
@@ -31,14 +34,21 @@ class JModemSender:
                 else:
                     print( "Unknown response received ({})!".format( response ) )
                     return
-            self.paknum += 1
+            print( "{}%".format( file.tell() / size * 100 ))
     
-    def make_packet( self, file ):
+    def make_packet( self, file, header=None ):
         packet = [SOH]
-        packet += self.paknum.to_bytes( 2, 'little' )
-        packet += self.totalpaks.to_bytes( 2, 'little' )
+        if header: packet += header
         packet += file.read( 133-len(packet))
         packet.extend( [0] * (133-len(packet))) # pad with zeroes up to 133
+        packet += [sum( packet ) % 256]
+        return packet
+
+    def make_first_packet( self, name, size ):
+        name, ext = os.path.splitext( name )
+        packet = [SOH]
+        packet += bytes( (name[:8] + ext[:3]).ljust( 12, '\0' ), 'ascii' )
+        packet += size.to_bytes( 4, 'little' )
         packet += [sum( packet ) % 256]
         return packet
 
@@ -48,9 +58,8 @@ if __name__=="__main__":
     parser.add_argument( 'path', help='path to the file to send' )
     args = parser.parse_args()
 
-    with serial.serial_for_url( url, baudrate=1200 ) as serial:
+    with serial.serial_for_url( url ) as serial:
         print( "Opened port {}".format( serial.name ) )
-        serial.baudrate = 1200
         
         filesize = os.stat( args.path ).st_size
         if filesize > 32000:
