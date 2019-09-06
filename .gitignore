@@ -2,7 +2,4 @@
 *.lst
 *.obj
 *.map
-*.000
 *.BAK
-*.UPX
-capture/
