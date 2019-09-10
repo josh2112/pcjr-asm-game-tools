@@ -1,0 +1,46 @@
+UTILITIES
+Earl F.  Glynn
+Vol. 9, No. 11
+
+MEMMAP
+
+Purpose: To display all allocated memory blocks, including memory-resident 
+         (TSR) programs and their associated environment memory blocks.  
+         Optionally, also displays the the variables in each environment block.
+
+Format: MEMMAP [/V]
+
+Remarks: Entered at the DOS prompt without its optional /V parameter, MEMMAP 
+         produces a display similar to that shown below:
+
+	Memory                                     MemMap (Version 2, May 89)
+	Control     Block Size
+	Block        [Bytes]       Owner
+	Segment    Hex   Decimal  Segment      Type                Name
+	-------  ------- -------  -------  ------------  ---------------------
+	  09CF    14A30    84528    0008   System        <DOS 3.30 kernel>
+	  1E73    00D30     3376    1E74   Program       <shell>
+	  1F47    00030       48    0000   Free Space    <unallocated>
+	  1F4B    000A0      160    1E74   Environment   <shell>
+	  1F56    00030       48    D001   Environment   C:\CHSTACK.COM
+	  1F5A    000B0      176    1F67   Environment   C:\EDITOR.EXE
+	  1F66    354C0   218304    1F67   Program       C:\EDITOR.EXE
+	  54B3    000B0      176    54C0   Data          <shell>
+	  54BF    00D30     3376    54C0   Program       <shell>
+	  5593    000A0      160    54C0   Environment   <shell>
+	  559E    000B0      176    55AB   Environment   D:\911\MEMMAP.EXE
+	  55AA    02920    10528    55AB   Program       D:\911\MEMMAP.EXE
+	  583D    47C20   293920    0000   Free Space    <unallocated>
+	
+	Note that under DOS 2.10, 3.3, and the DOS Command subset of OS/2 
+        Extended Edition 1.1 some program names will be designated <unknown> 
+        that are reported fully under DOS 4.0.  When used under OS/2 EE, DOS 
+        identifies itself as DOS 10.10 <kernel>.
+	
+	Entered with the /V switch, MEMMAP also reports the environmental 
+        variables that are loaded with each TSR.  These variables initially 
+        loaded by DOS are contained in the first environment block with the 
+        name <shell>, as  shown above.  The default size of this block is 160 
+        bytes.
+	
+
