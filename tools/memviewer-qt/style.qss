@@ -1,0 +1,22 @@
+/*QWidget#window
+{
+    width: 640px;
+    height: 480px;
+}*/
+
+QSpinBox
+{
+    qproperty-alignment: 'AlignRight';
+    min-width: 60px;
+}
+
+QSpinBox#offsetField
+{
+    qproperty-prefix: '0x';
+    qproperty-displayIntegerBase: 16;
+}
+
+QLabel#imageField
+{
+    background-color: gray;
+}
