@@ -3,5 +3,6 @@
 *.obj
 *.map
 *.BAK
+*.pyc
 
 !DEBUG.COM

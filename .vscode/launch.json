@@ -1,0 +1,36 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Current File (Integrated Terminal)",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Test rleencodeimage.py with room1",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/tools/prepimage/rleencodeimage.py",
+            "console": "integratedTerminal",
+            "args": [
+                "${workspaceFolder}/../pcjr-asm-game/room1/room1.png",
+                "${workspaceFolder}/../pcjr-asm-game/room1/room1-rle.dat",
+            ]
+        },
+        {
+            "name": "Test vectorize-png.py with room1",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/tools/prepimage/vectorize-png.py",
+            "console": "integratedTerminal",
+            "args": [
+                "${workspaceFolder}/../pcjr-asm-game/room1/room1.png",
+            ]
+        },
+    ]
+}
