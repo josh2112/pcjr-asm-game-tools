@@ -35,7 +35,7 @@ class Rect( Polyline ):
 class Path( Polyline ):
     def __init__( self, tag, offset ):
         super().__init__( tag, offset )
-        self.cursor, self.lines = (0,0), []
+        self.initpt, self.cursor, self.lines = (0,0), (0,0), []
         for segment in svgtools.parse_path( tag['d'] ):
             print( "SEGMENT ", segment )
             args, cmd = segment[1:], segment[0]
@@ -43,7 +43,8 @@ class Path( Polyline ):
                 self.moveto_abs( args[:2] )
                 if len(args) > 2: self.polyline_abs( args[2:] )
             elif cmd == 'm':
-                self.moveto_abs( (self.cursor[0]+args[0], self.cursor[1]+args[1]) )
+                if not self.lines: self.moveto_abs( args[:2] )
+                else: self.moveto_rel( args[:2] )
                 if len(args) > 2: self.polyline_rel( args[2:] )
             elif cmd == 'Z'or cmd == 'z':
                 self.closepath()
@@ -63,7 +64,11 @@ class Path( Polyline ):
                 raise Exception( "Don't understand command '{}' of path {}".format( cmd, shape['id'] ))
     
     def moveto_abs( self, pt ):
-        self.cursor = (pt[0]+self.offset[0], pt[1]+self.offset[1])
+        self.initpt = self.cursor = (pt[0]+self.offset[0], pt[1]+self.offset[1])
+        print( "moveto:", self.cursor )
+
+    def moveto_rel( self, pt ):
+        self.initpt = self.cursor = (pt[0]+self.cursor[0], pt[1]+self.cursor[1])
         print( "moveto:", self.cursor )
 
     def polyline_abs( self, args ):
@@ -103,28 +108,39 @@ class Path( Polyline ):
         self.polyline_rel( pts )
     
     def closepath( self ):
-        line = (self.cursor, self.lines[0][0])
+        line = (self.cursor, self.initpt)
         print( "line", line )
         self.lines.append( line )
         self.cursor = self.lines[-1][-1]
 
-
-# TODO Tomorrow: Draw each figure to a separate .PNG (named with the figure's ID)
-# so we can see which paths are messing up
+# Algorithm:
+# - Draw the paths in reverse (front to back).
+# - While plotting polyline points, if the canvas is non-white, skip it. This will prevent drawing useless paths
+#   under stuff that will be filled over.
+# - For things with a fill color, flood-fill them. It won't matter if we skipped pixels while drawing the border,
+#   because _something_ will be there to stop the flood.
+#   - TODO: how to determine a starting point for the flood fill?
+#     - Maybe add it manually as an attribute on the SVG tag?
+# - If this works, serialize the paths to a simple format:
+#   - lines first, individually, chopping out the parts of lines we didn't draw
+#   - flood fill points next
+# - Write Python script to render simple serialized format to make sure it works
 
 if __name__ == '__main__':
     img = Image.new( 'P', (160,168), WHITE )
     img.putpalette( palettetools.pil_palette( palettetools.cga16 ))
-
+    
     with open( '../pcjr-asm-game/room1/room1.svg', ) as f:
         soup = BeautifulSoup( f, 'html.parser' )
     layer = soup.select( '#layer1' )[0]
     offset = svgtools.get_transform( layer )
     
-    for tag in list( reversed( layer.find_all( True ))):
+    tags = list( layer.find_all( True ))
+    for tag in tags:
         if tag.name == 'path': figure = Path( tag, offset )
         elif tag.name == 'rect': figure = Rect( tag, offset )
         else: raise Exception( "Don't know how to handle tag", tag.name )
+        
         figure.draw_into( img, palettetools.cga16 )
     
     img.show()
