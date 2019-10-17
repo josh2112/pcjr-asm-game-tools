@@ -11,6 +11,7 @@ def get_style( tag ):
     return style
 
 def get_transform( tag ):
+    if not tag.has_attr( 'transform' ): return (0, 0)
     tokens = re.split( '\(|,|\)', tag['transform'] )
     if tokens[0] != 'translate':
         raise Exception( "Don't understand {}.transform: '{}'".format( tag.name, tag['transform'] ))
@@ -36,13 +37,13 @@ def parse_path( path ):
                 entities.append( entity )
                 isfloat = False
                 entity = ''
-            if len(entities) > 1: yield [entities[0]] + [float(x) for x in entities[1:]]
-            elif len(entities) == 1: yield entities
+            if len(entities) > 1: yield entities[0], [float(x) for x in entities[1:]]
+            elif len(entities) == 1: yield entities[0], None
             entities = []
             entities.append( char )
         elif char == '.':
             if isfloat:
-                yield entity
+                entities.append( entity )
                 entity = '.'
             else:
                 entity += '.'
@@ -56,5 +57,5 @@ def parse_path( path ):
                 entity += char
     if entity:
         entities.append( entity )
-    if len(entities) > 1: yield [entities[0]] + [float(x) for x in entities[1:]]
-    elif len(entities) == 1: yield entities
+    if len(entities) > 1: yield entities[0], [float(x) for x in entities[1:]]
+    elif len(entities) == 1: yield entities[0], None

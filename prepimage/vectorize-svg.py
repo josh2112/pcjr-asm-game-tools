@@ -1,27 +1,29 @@
 from bs4 import BeautifulSoup
 from PIL import Image
+import argparse, re, itertools, more_itertools, logging
 import palettetools, svgtools, drawingtools
-import sys, re, itertools
 
 WHITE = 15
 
-def pairwise(iterable):
-    "s -> (s0,s1), (s1,s2), (s2, s3), ..."
-    a, b = itertools.tee(iterable)
-    next(b, None)
-    return zip(a, b)
-
+#logging.basicConfig( level=logging.INFO )
 
 class Polyline:
     def __init__( self, tag, offset ):
-        self.tag, self.offset = tag, offset
+        self.tag = tag
+        local_offset = svgtools.get_transform( tag )
+        self.offset = (offset[0]+local_offset[0], offset[1]+local_offset[1])
         self.lines = []
 
     def draw_into( self, img, palette ):
         style = svgtools.get_style( self.tag )
         color = style['fill'] if 'fill' in style and style['fill'] else style['stroke']
         c = palettetools.closest( color, palette )
-        drawingtools.draw_polylines( self.lines, c, img )
+        desc = self.tag.find( "desc" )
+        if desc:
+            values = [float(v) for v in re.split( "\s*,\s*|\s+", desc.text.strip())]
+            fill_points = list( zip( values[::2], [img.size[1] - v for v in values[1::2]] ))
+        else: fill_points = []
+        drawingtools.draw_poly( self.lines, c, fill_points, img )
 
 class Rect( Polyline ):
     def __init__( self, tag, offset ):
@@ -36,9 +38,8 @@ class Path( Polyline ):
     def __init__( self, tag, offset ):
         super().__init__( tag, offset )
         self.initpt, self.cursor, self.lines = (0,0), (0,0), []
-        for segment in svgtools.parse_path( tag['d'] ):
-            print( "SEGMENT ", segment )
-            args, cmd = segment[1:], segment[0]
+        for cmd, args in svgtools.parse_path( tag['d'] ):
+            logging.info( "CMD %s, %s", cmd, args )
             if cmd == 'M':
                 self.moveto_abs( args[:2] )
                 if len(args) > 2: self.polyline_abs( args[2:] )
@@ -65,16 +66,16 @@ class Path( Polyline ):
     
     def moveto_abs( self, pt ):
         self.initpt = self.cursor = (pt[0]+self.offset[0], pt[1]+self.offset[1])
-        print( "moveto:", self.cursor )
+        logging.info( "  moveto %s", self.cursor )
 
     def moveto_rel( self, pt ):
         self.initpt = self.cursor = (pt[0]+self.cursor[0], pt[1]+self.cursor[1])
-        print( "moveto:", self.cursor )
+        logging.info( "  moveto %s", self.cursor )
 
     def polyline_abs( self, args ):
         pts = [self.cursor] + [(p[0]+self.offset[0], p[1]+self.offset[1]) for p in zip( args[::2], args[1::2] )]
-        lines = list( pairwise( pts ))
-        print( "lines:", lines )
+        lines = list( more_itertools.pairwise( pts ))
+        logging.info( "  lines %s", lines )
         self.lines += lines
         self.cursor = lines[-1][-1]
     
@@ -82,8 +83,8 @@ class Path( Polyline ):
         pts = [self.cursor] + list( zip( args[::2], args[1::2] ))
         for i in range( 1, len(pts)):
             pts[i] = (pts[i-1][0]+pts[i][0], pts[i-1][1]+pts[i][1])
-        lines = list( pairwise( pts ))
-        print( "lines:", lines )
+        lines = list( more_itertools.pairwise( pts ))
+        logging.info( "  lines %s", lines )
         self.lines += lines
         self.cursor = lines[-1][-1]
         
@@ -109,38 +110,47 @@ class Path( Polyline ):
     
     def closepath( self ):
         line = (self.cursor, self.initpt)
-        print( "line", line )
+        logging.info( "  line %s", line )
         self.lines.append( line )
         self.cursor = self.lines[-1][-1]
 
+
+def render_tag( tag, offset, img ):
+    if tag.name == 'path': figure = Path( tag, offset )
+    elif tag.name == 'rect': figure = Rect( tag, offset )
+    else: raise Exception( "Don't know how to handle tag", tag.name )
+    figure.draw_into( img, palettetools.cga16 )
+
 # Algorithm:
-# - Draw the paths in reverse (front to back).
-# - While plotting polyline points, if the canvas is non-white, skip it. This will prevent drawing useless paths
-#   under stuff that will be filled over.
-# - For things with a fill color, flood-fill them. It won't matter if we skipped pixels while drawing the border,
-#   because _something_ will be there to stop the flood.
-#   - TODO: how to determine a starting point for the flood fill?
-#     - Maybe add it manually as an attribute on the SVG tag?
+# - Collect filled features only (fill != none), render them front to back (reverse file order).
+#   - While plotting points on the boundary, if the canvas is non-white, skip it. This will prevent drawing useless paths
+#     under stuff that will be filled over.
+#   - After plotting the boundary, flood-fill at points stored in the SVG "description" field. It won't matter if
+#     we skipped pixels while drawing the border, because _something_ will be there to stop the flood.
+# - Collect stroke features only (fill == none), render them back to front (in file order)
 # - If this works, serialize the paths to a simple format:
 #   - lines first, individually, chopping out the parts of lines we didn't draw
 #   - flood fill points next
-# - Write Python script to render simple serialized format to make sure it works
+# - Write Python script to render the simple serialized format to make sure it works
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser( description='Convert an SVG file into a simplified vector format' )
+    parser.add_argument( 'svgpath', type=argparse.FileType('rb'), help='path to SVG file' )
+    args = parser.parse_args()
+
     img = Image.new( 'P', (160,168), WHITE )
     img.putpalette( palettetools.pil_palette( palettetools.cga16 ))
     
-    with open( '../pcjr-asm-game/room1/room1.svg', ) as f:
-        soup = BeautifulSoup( f, 'html.parser' )
+    soup = BeautifulSoup( args.svgpath, 'html.parser' )
     layer = soup.select( '#layer1' )[0]
     offset = svgtools.get_transform( layer )
+    logging.info( "OFFSET %s", offset )
+
+    alltags = layer.find_all( True, recursive=False )
+    polys = [t for t in alltags if 'fill:none' not in t['style']]
+    lines = [t for t in alltags if 'fill:none' in t['style']]
     
-    tags = list( layer.find_all( True ))
-    for tag in tags:
-        if tag.name == 'path': figure = Path( tag, offset )
-        elif tag.name == 'rect': figure = Rect( tag, offset )
-        else: raise Exception( "Don't know how to handle tag", tag.name )
-        
-        figure.draw_into( img, palettetools.cga16 )
+    for tag in reversed( polys ): render_tag( tag, offset, img )
+    for tag in lines: render_tag( tag, offset, img )
     
     img.show()
