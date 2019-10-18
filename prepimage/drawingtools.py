@@ -1,3 +1,6 @@
+import logging
+
+callback_update_image = None
 
 def line( x0, y0, x1, y1 ):
     '''Bresenham line drawing algorithm. Yields pixels on the line (x0,y0) to (x1,y1)'''
@@ -27,7 +30,7 @@ def line( x0, y0, x1, y1 ):
 _is_colorable = lambda x,y,img: img.getpixel( (x,y) ) == 15
 
 def flood_fill( pt, color, img ):
-    print( "filling {} with {}".format( pt, color ))
+    logging.info( "filling {} with {}".format( pt, color ))
     pixels = [pt]
     while pixels:
         x,y = pixels.pop()
@@ -38,6 +41,8 @@ def flood_fill( pt, color, img ):
 
         while x < img.size[0] and _is_colorable( x, y, img ):
             img.putpixel( (x,y), color )
+            if callback_update_image: callback_update_image()
+            
             if not span_up and y > 0 and _is_colorable( x, y-1, img ):
                 pixels.append( (x,y-1) )
                 span_up = True
@@ -46,7 +51,7 @@ def flood_fill( pt, color, img ):
             if not span_down and y < img.size[1]-1 and _is_colorable( x, y+1, img ):
                 pixels.append( (x,y+1) )
                 span_down = True
-            elif span_down and (y == img.size[1]-1 and not _is_colorable( x, y+1, img )): span_down = False
+            elif span_down and (y == img.size[1]-1 or not _is_colorable( x, y+1, img )): span_down = False
 
             x += 1
 
@@ -64,3 +69,4 @@ def draw_poly( lines, color, fill_points, img ):
                 img.putpixel( pt, color )
     for pt in fill_points:
         flood_fill( prepare( pt, img.size ), color, img )
+    if callback_update_image: callback_update_image()

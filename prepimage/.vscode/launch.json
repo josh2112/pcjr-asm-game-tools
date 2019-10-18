@@ -5,10 +5,10 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "vectorize-svg with room1.png",
+            "name": "svg-simplify with room1.png",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/vectorize-svg.py",
+            "program": "${workspaceFolder}/svg-simplify.py",
             "console": "integratedTerminal",
             "args": [
                 "${workspaceFolder}/../../pcjr-asm-game/room1/room1.svg"

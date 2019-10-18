@@ -1,11 +1,10 @@
-from bs4 import BeautifulSoup
-from PIL import Image
-import argparse, re, itertools, more_itertools, logging
-import palettetools, svgtools, drawingtools
+import bs4
+from PIL import Image, ImageQt
+from PyQt5 import QtWidgets, QtGui, QtCore
+import argparse, os, re, itertools, more_itertools, logging
+import palettetools, svgtools, drawingtools, qttools
 
 WHITE = 15
-
-#logging.basicConfig( level=logging.INFO )
 
 class Polyline:
     def __init__( self, tag, offset ):
@@ -62,7 +61,7 @@ class Path( Polyline ):
             elif cmd == 'v':
                 self.vline_rel( args )
             else:
-                raise Exception( "Don't understand command '{}' of path {}".format( cmd, shape['id'] ))
+                raise Exception( "Don't understand command '{}' of path {}".format( cmd, tag['id'] ))
     
     def moveto_abs( self, pt ):
         self.initpt = self.cursor = (pt[0]+self.offset[0], pt[1]+self.offset[1])
@@ -121,36 +120,80 @@ def render_tag( tag, offset, img ):
     else: raise Exception( "Don't know how to handle tag", tag.name )
     figure.draw_into( img, palettetools.cga16 )
 
+
+class SVGSimplifyWindow( QtWidgets.QWidget ):
+    
+    def __init__( self, parent=None ):
+        super().__init__( parent )
+        self.imageField = qttools.QAliasedPixmap( 320/168, 3 )
+        
+        hbox = QtWidgets.QHBoxLayout()
+        hbox.setContentsMargins( QtCore.QMargins() )
+        hbox.addWidget( self.imageField )
+        
+        self.setLayout( hbox )
+    
+    def set_image( self, pil_img ):
+        self.imageField.setPixmap( QtGui.QPixmap.fromImage( ImageQt.ImageQt( pil_img ) ))
+        self.imageField.adjustSize()
+
+def update_image( window, img ):
+    window.set_image( img )
+    QtCore.QCoreApplication.processEvents()
+
 # Algorithm:
-# - Collect filled features only (fill != none), render them front to back (reverse file order).
-#   - While plotting points on the boundary, if the canvas is non-white, skip it. This will prevent drawing useless paths
+# * Collect filled features only (fill != none), render them front to back (reverse file order).
+#   * While plotting points on the boundary, if the canvas is non-white, skip it. This will prevent drawing useless paths
 #     under stuff that will be filled over.
-#   - After plotting the boundary, flood-fill at points stored in the SVG "description" field. It won't matter if
+#   * After plotting the boundary, flood-fill at points stored in the SVG "description" field. It won't matter if
 #     we skipped pixels while drawing the border, because _something_ will be there to stop the flood.
-# - Collect stroke features only (fill == none), render them back to front (in file order)
+# * Collect stroke features only (fill == none), render them back to front (in file order)
 # - If this works, serialize the paths to a simple format:
 #   - lines first, individually, chopping out the parts of lines we didn't draw
 #   - flood fill points next
 # - Write Python script to render the simple serialized format to make sure it works
+# - Further optimize by removing empty lines and combining adjacent lines with the same slope
 
 if __name__ == '__main__':
+    #logging.basicConfig( level=logging.INFO )
+
     parser = argparse.ArgumentParser( description='Convert an SVG file into a simplified vector format' )
     parser.add_argument( 'svgpath', type=argparse.FileType('rb'), help='path to SVG file' )
     args = parser.parse_args()
 
     img = Image.new( 'P', (160,168), WHITE )
     img.putpalette( palettetools.pil_palette( palettetools.cga16 ))
-    
-    soup = BeautifulSoup( args.svgpath, 'html.parser' )
+
+    app = QtWidgets.QApplication( [] )
+    app.setApplicationName( os.path.basename( args.svgpath.name ) + ' - SVG Simplify' )
+    #with open( "style.qss", 'r' ) as f:
+    #    app.setStyleSheet( f.read())
+
+    window = SVGSimplifyWindow()
+    window.set_image( img )
+    window.show()
+    QtCore.QCoreApplication.processEvents()
+
+    soup = bs4.BeautifulSoup( args.svgpath, 'html.parser' )
     layer = soup.select( '#layer1' )[0]
     offset = svgtools.get_transform( layer )
     logging.info( "OFFSET %s", offset )
 
     alltags = layer.find_all( True, recursive=False )
+    #alltags = [t for t in alltags if t['id'] in ('path1065')]
+
     polys = [t for t in alltags if 'fill:none' not in t['style']]
     lines = [t for t in alltags if 'fill:none' in t['style']]
     
-    for tag in reversed( polys ): render_tag( tag, offset, img )
-    for tag in lines: render_tag( tag, offset, img )
+    for tag in reversed( polys ):
+        render_tag( tag, offset, img )
+        update_image( window, img )
+
+    for tag in lines:
+        render_tag( tag, offset, img )
+        update_image( window, img )
     
-    img.show()
+    window.set_image( img )
+    img.save( "test.png" )
+    
+    app.exec_()
