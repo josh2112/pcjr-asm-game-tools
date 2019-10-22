@@ -6,3 +6,4 @@
 *.pyc
 
 !DEBUG.COM
+prepimage/test.png
