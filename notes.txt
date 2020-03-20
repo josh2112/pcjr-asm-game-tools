@@ -14,6 +14,7 @@ Resources:
 http://stanislavs.org/helppc/int_10.html
 https://www.atarimagazines.com/compute/issue57/kings_quest.html
 https://computerarchive.org/files/computer/magazines/jrNewsletter/1989s/September%20October%201989(s).pdf
+https://wiki.scummvm.org/index.php/AGI/Specifications/Overview
 
 
 Rendering scheme
