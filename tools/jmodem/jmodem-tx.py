@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 
-import sys, math, os
+import sys, os
 import serial
 import argparse
 
+BAUD = 4800
+
 #url = "socket://localhost:7000"
-url = "/dev/tty.UC-232AC"
+#url = "/dev/tty.UC-232AC"
+url = "COM3"
 
 SOH = 1
 ACK = 6
@@ -58,8 +61,8 @@ if __name__=="__main__":
     parser.add_argument( 'path', help='path to the file to send' )
     args = parser.parse_args()
 
-    with serial.serial_for_url( url, baudrate=1200 ) as serial:
-        serial.baudrate = 1200
+    with serial.serial_for_url( url, baudrate=BAUD ) as serial:
+        serial.baudrate = BAUD
         print( "Opened port {}".format( serial.name ) )
         
         filesize = os.stat( args.path ).st_size

@@ -42,7 +42,8 @@ Rendering loop - to be performed each time a sprite moves:
 Real PCjr notes
 ---------------
 
-My PCjr has only 192K memory hardware-detected. Must boot with "device=pcjrmem.com" in config.sys to get it all recognized by DOS. JRECV.EXE needs it as well. BUT... booting with this messes up video memory alignments? Mode-switching into the graphics mode actually stays in a text mode (a character is written to the screen instead of a pixel)
+My PCjr has only 192K memory hardware-detected. Must boot with "device=pcjrmem.com" in config.sys to get it all recognized by DOS. JRECV.EXE needs it as well.
+BUT... booting with this messes up video memory alignments? Mode-switching into the graphics mode actually stays in a text mode (a character is written to the screen instead of a pixel)
 
 device=pcjrmem.com  (with /c or /e)
 No option is 16k, /e is 32k, /c is 96k

@@ -1,7 +1,7 @@
 10 CLS:DEFINT A-Z
 20 PRINT "JMODEM by Joshua Foster"
 30 PRINT "Opening serial port...";
-40 OPEN "COM2:1200,N,8,1,CS,DS,CD" AS #1
+40 OPEN "COM2:4800,N,8,1,CS,DS,CD" AS #1
 50 PRINT "Waiting for data..."
 60 'Receive header
 70 FIELD 1, 1 AS SOH$, 12 AS FILENAME$, 2 AS FILESIZE$, 1 AS CHK$
