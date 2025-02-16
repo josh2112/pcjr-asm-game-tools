@@ -5,15 +5,8 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: Current File (Integrated Terminal)",
-            "type": "python",
-            "request": "launch",
-            "program": "${file}",
-            "console": "integratedTerminal"
-        },
-        {
             "name": "Test rleencodeimage.py with room1",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/tools/prepimage/rleencodeimage.py",
             "console": "integratedTerminal",
@@ -24,7 +17,7 @@
         },
         {
             "name": "Test vectorize-png.py with room1",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/tools/prepimage/vectorize-png.py",
             "console": "integratedTerminal",

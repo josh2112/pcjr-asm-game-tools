@@ -1,14 +1,18 @@
 #!/usr/bin/env python3
+# /// script
+# requires-python = ">=3.11"
+# dependencies = [
+#     "pyserial",
+# ]
+# ///
 
 import sys, os
 import serial
 import argparse
 
-BAUD = 4800
+from serial.tools.list_ports import comports
 
-#url = "socket://localhost:7000"
-#url = "/dev/tty.UC-232AC"
-url = "COM3"
+BAUD = 4800
 
 SOH = 1
 ACK = 6
@@ -30,10 +34,13 @@ class JModemSender:
             while True:
                 #print( "Writing ", bytes(packet ))
                 self.serial.write( bytes( packet ) )
-                response = self.serial.read( 1 )[0]
-                if response == ACK:
+                response = self.serial.read( 1 )
+                if not response:
+                    print( "No response received, make sure JMODEM is running on remote!" )
+                    return
+                if response[0] == ACK:
                     break
-                elif response == NAK:
+                elif response[0] == NAK:
                     print( "NAK received, resending packet" )
                 else:
                     print( "Unknown response received ({})!".format( response ) )
@@ -61,7 +68,9 @@ if __name__=="__main__":
     parser.add_argument( 'path', help='path to the file to send' )
     args = parser.parse_args()
 
-    with serial.serial_for_url( url, baudrate=BAUD ) as serial:
+    port = next( p for p in serial.tools.list_ports.comports() if "USB" in p.hwid ).device
+
+    with serial.Serial( port, baudrate=BAUD, timeout=1.0 ) as serial:
         serial.baudrate = BAUD
         print( "Opened port {}".format( serial.name ) )
         
@@ -73,5 +82,3 @@ if __name__=="__main__":
         with open( args.path, 'rb' ) as file:
             print( "Sending file '{}' ({} bytes)...".format( args.path, filesize ))
             JModemSender( serial ).send( file, os.path.basename( args.path ), filesize )
-
-        print( "Done!" )
