@@ -1,8 +1,0 @@
-1) Start tcprelay.py in its own shell:
-.\tcprelay.py
-
-2) Start the receiver (PC-BASIC running JMODEM.BAS):
-. "C:\Users\jf334.CEM\AppData\Local\Programs\PC-BASIC 2.0\pcbasic.exe" JMODEM.BAS -b --com2=SOCKET:localhost:7000
-
-3) Start the sender:
-py -3 jmodem-tx.py [file]

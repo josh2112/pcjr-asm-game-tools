@@ -79,7 +79,7 @@ if __name__ == "__main__":
         if (p.name.lower() == args.serialport if args.serialport else "USB" in p.hwid)
     ).device
 
-    with serial.Serial(port, baudrate=BAUD, timeout=1.0) as serial:
+    with serial.Serial(port, baudrate=BAUD, timeout=1.0, write_timeout=1.0) as serial:
         serial.baudrate = BAUD
         print("Opened port {}".format(serial.name))
 
