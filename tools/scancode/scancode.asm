@@ -1,5 +1,5 @@
 ; Build with:
-; . "$env:USERPROFILE\AppData\Local\bin\NASM\nasm.exe" -f bin -o scancode.com .\scancode.asm
+; . nasm -f bin -o scancode.com .\scancode.asm
 ; Run with:
 ; . "..\EmuCR-Dosbox-r4059\dosbox.exe" -conf ..\..\dosbox.conf scancode.com
 
@@ -11,14 +11,14 @@
 section .data
 
   is_running: db 1
-  buf: db '0000',0xa,0xd,0
+  buf: db '0000',0xa,0xd,0 
 
 section .text
 
 ; Prints the given '$'-terminated string.
 %macro print 1
-	mov dx, %1
-	mov ax, 0x0900
+	MOV dx, %1
+	mov ax, f0x0900
 	int 21h
 %endmacro
 
@@ -67,7 +67,7 @@ next_character:
 
         ; isolate this nibble
         mov bx, dx
-        and bx, 0xf000
+        AND bx, 0xf000
         shr bx, 1
         shr bx, 1
         shr bx, 1
