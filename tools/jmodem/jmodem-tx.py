@@ -62,7 +62,7 @@ class JModemSender:
         name, ext = os.path.splitext(name)
         packet = [SOH]
         packet += bytes((name[:8] + ext[:4]).ljust(12, "\0"), "ascii")
-        packet += size.to_bytes(2, "little")
+        packet += size.to_bytes(4, "little")
         packet += [sum(packet) % 256]
         return packet
 
@@ -84,9 +84,6 @@ if __name__ == "__main__":
         print("Opened port {}".format(serial.name))
 
         filesize = os.stat(args.path).st_size
-        if filesize > 32767:
-            print("Too big to send!")
-            sys.exit
 
         with open(args.path, "rb") as file:
             print("Sending file '{}' ({} bytes)...".format(args.path, filesize))
