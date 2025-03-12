@@ -1,5 +1,6 @@
 
-parse_color = lambda hexstr: tuple( [int(hexstr[i:i+2],16) for i in (1, 3, 5)] )
+def parse_color( hexstr ):
+    return tuple( [int(hexstr[i:i+2],16) for i in (1, 3, 5)] )
 
 def parse( palstr ):
     return [parse_color( line ) for line in (l for l in (l.strip() for l in palstr.split( '\n' )) if l)]
@@ -28,7 +29,6 @@ cga16 = parse( '''
     #FF55FF light magenta
     #FFFF55 yellow
     #FFFFFF white
-      
 ''' )
 
 if __name__ == '__main__':

@@ -1,15 +1,15 @@
 import bs4
 from PIL import Image, ImageQt
-from PyQt5 import QtWidgets, QtGui, QtCore
+#from PyQt5 import QtWidgets, QtGui, QtCore
 import argparse, os, re, logging
-import palettetools, svgtools, drawingtools, qttools
+import palettetools, svgtools, drawingtools#, qttools
 
 def figure_from_tag( tag, offset ):
     if tag.name == 'path': return svgtools.Path( tag, offset )
     elif tag.name == 'rect': return svgtools.Rect( tag, offset )
     else: raise Exception( "Don't know how to handle tag", tag.name )
 
-
+"""
 class SVGSimplifyWindow( QtWidgets.QWidget ):
     def __init__( self, parent=None ):
         super().__init__( parent )
@@ -30,6 +30,7 @@ class SVGSimplifyWindow( QtWidgets.QWidget ):
     def set_image_2( self, pil_img ):
         self.imageField2.setPixmap( QtGui.QPixmap.fromImage( ImageQt.ImageQt( pil_img ) ))
         self.imageField2.adjustSize()
+"""
 
 # Algorithm:
 # * Collect filled features only (fill != none), render them front to back (reverse file order).
@@ -57,22 +58,22 @@ if __name__ == '__main__':
     img2 = Image.new( 'P', img.size, 15 )
     img2.putpalette( img.getpalette())
 
-    app = QtWidgets.QApplication( [] )
-    app.setApplicationName( os.path.basename( args.svgpath.name ) + ' - SVG Simplify' )
+    #app = QtWidgets.QApplication( [] )
+    #app.setApplicationName( os.path.basename( args.svgpath.name ) + ' - SVG Simplify' )
     #with open( "style.qss", 'r' ) as f:
     #    app.setStyleSheet( f.read())
     
-    window = SVGSimplifyWindow()
-    window.set_image_1( img )
-    window.set_image_2( img )
-    window.show()
-    QtCore.QCoreApplication.processEvents()
+    #window = SVGSimplifyWindow()
+    #window.set_image_1( img )
+    #window.set_image_2( img )
+    #window.show()
+    #QtCore.QCoreApplication.processEvents()
     
-    def update_image_1():
-        window.set_image_1( img )
-        QtCore.QCoreApplication.processEvents()
+    #def update_image_1():
+    #    window.set_image_1( img )
+    #    QtCore.QCoreApplication.processEvents()
 
-    simplifier = drawingtools.SVGSimplifier( img, update_image_1, False )
+    simplifier = drawingtools.SVGSimplifier( img, None, False )# img, update_image_1, False )
 
     soup = bs4.BeautifulSoup( args.svgpath, 'html.parser' )
     layer = soup.select( '#layer1' )[0]
@@ -91,14 +92,17 @@ if __name__ == '__main__':
     for tag in lines:
         simplifier.render( figure_from_tag( tag, offset ))
 
-    update_image_1()
-    img.save( "test.png" )
+    #update_image_1()
+    #img.save( "test.png" )
     
     simplifier.clean()
 
     renderer = drawingtools.SimpleSVGRenderer( img2 )
     renderer.render( simplifier.cmds )
     
-    window.set_image_2( img2 )
+    #window.set_image_2( img2 )
     
-    app.exec_()
+    #app.exec_()
+
+    img.show()
+    img2.show()

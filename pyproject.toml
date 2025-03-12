@@ -5,5 +5,8 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "bs4>=0.0.2",
+    "more-itertools>=10.6.0",
+    "pillow>=11.1.0",
     "pyserial>=3.5",
 ]
