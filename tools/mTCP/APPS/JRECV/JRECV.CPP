@@ -49,7 +49,7 @@ struct JRecvHeader
 int main(int argc, char *argv[])
 {
   fprintf(stderr, "JRECV v0.1 (c) 2018 Joshua Foster\n");
-  fprintf(stderr, "Built %s %s", __DATE__, __TIME__);
+  fprintf(stderr, "Built %s %s\n", __DATE__, __TIME__);
 
   // Read command line arguments
   parseArgs(argc, argv);

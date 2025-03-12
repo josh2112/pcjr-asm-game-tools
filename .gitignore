@@ -7,3 +7,8 @@
 
 !DEBUG.COM
 prepimage/test.png
+
+
+tools/floppyimages/*
+!tools/floppyimages/*.ps1
+!tools/floppyimages/*.exe

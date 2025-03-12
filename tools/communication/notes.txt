@@ -1,0 +1,18 @@
+Notes for when I forget this in 2 years
+---------------------------------------
+
+JMODEM.BAS/jmodem-tx.py:
+
+JMODEM.BAS allows the PCjr to receive a file over the serial port. It's slow, but reliable, and doesn't need any special system configuration. In fact, booting with pcjrmem or other device drivers seems to mess it up (possibly not enough free memory?) Just boot up with vanilla DOS, then run 'basic jmodem.bas'.
+
+jmodem-tx.py is the companion sender. Once JMODEM.BAS is waiting for a file, use jmodem-tx.py to send it. You can pass a serial port name with -s, otherwise it will use the first USB-to-serial port it finds.
+
+JMODEM2.BAS/jmodem2-tx.py:
+
+This was supposed to be a a faster JMODEM that used flow control instead of ACKs to allow more data to be transfered at once, but I never got it to work. It always seems to get hung up near the end of the transfer.
+
+JRECV.EXE/jsend.py:
+
+These use TCP/IP to for file transfer, and are much faster than the .BAS solutions. But there is more overhead: The Xircom adapter needs to be powered up and connected to the LAN, and the PE3PD driver has to be loaded and configured. The "Joshware" disk has all this ready to go, just run ETHON.BAT or ETHOFF.BAT to turn ethernet configuration on or off, then reboot the system. There is one bug: filenames that are a full 8 letters long don't work. Just shorten it.
+
+JRECV.EXE is in mTCP/APPS/JRECV already built, or you can rebuild it with the build-jrecv.bat script.
