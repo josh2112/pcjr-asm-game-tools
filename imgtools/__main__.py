@@ -21,34 +21,40 @@ def cli():
 
 
 @cli.command()
-@click.argument("color", type=click.File("rb"))
-@click.argument("depth", type=click.File("rb"))
+@click.option("-c", "--color", type=click.File("rb"), required=True)
+@click.option("-d", "--depth", type=click.File("rb"), required=True)
 @click.argument("output", type=click.File("wb"))
 def pack(color: typing.IO, depth: typing.IO, output: typing.IO):
-    """Packs COLOR and DEPTH into a packed image file saved as OUTPUT."""
+    """Packs color and depth images into a packed image file saved as OUTPUT. COLOR and DEPTH mus
+    be indexed PNG files using the 16-color CGA palette. OUTPUT will be a binary file, one byte per
+    pixel, with depth as the upper 4 bits and color as the lower 4 bits."""
 
-    if len(color) != len(depth):
-        raise "COLOR and DEPTH files must be the same size"
+    cimg, dimg = Image.open(color), Image.open(depth)
 
-    cbytes, dbytes = color.read(), depth.read()
+    if cimg.size != dimg.size:
+        raise "Color and depth files must be the same size"
 
-    packed = [cbytes[i] | (dbytes[i] << 4) for i in range(len(cbytes))]
+    if (
+        cimg.mode != dimg.mode
+        or cimg.palette.colors != dimg.palette.colors
+        or len(cimg.palette.colors) != 16
+    ):
+        raise "Color and depth files must both be 16-color indexed PNGs"
 
-    w = 320
-    h = len(packed) // w
-
-    img = Image.new("P", (w, h))
-    img.putpalette(pil_palette(cga16))
-    img.putdata(packed)
-
-    img.show()
+    output.write(
+        bytes(
+            (d << 4) | (c & 0xF)
+            for d, c in zip(list(dimg.getdata()), list(cimg.getdata()))
+        )
+    )
 
 
 @cli.command()
 @click.argument("input", type=click.File("rb"))
 @click.argument("output", type=str)
 def unpack(input: typing.IO, output: str):
-    """Unpacks the packed (depth and color) image INPUT into OUTPUT.depth.png and OUTPUT.color.png."""
+    """Unpacks the packed (depth and color) image INPUT and saves the resulting depth and color
+    images as 16-color indexed (CGA palette) PNG images OUTPUT.depth.png and OUTPUT.color.png."""
 
     packed = input.read()
     w = 160
