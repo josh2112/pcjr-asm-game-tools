@@ -1,0 +1,31 @@
+#
+# Makefile for PCjr ASM Game project
+#
+NASM="$(USERPROFILE)\AppData\Local\bin\NASM\nasm.exe"
+DOSBOX="..\dosbox\dosbox.exe"
+RM=cmd \/C del
+
+TARGET=alloc
+TARGET.COM=$(TARGET).com
+
+MACROS=../../pcjr-asm-game/std/stdio.mac
+SRCS=../../pcjr-asm-game/std/stdio.mac
+DEPS=$(MACROS) $(SRCS)
+
+NASM_OPTS=-f bin -l $(TARGET).lst
+DOSBOX_OPTS=-conf "..\dosbox.conf"
+
+$(TARGET.COM): $(TARGET).asm $(DEPS)
+	$(NASM) $(NASM_OPTS) -o $@ $<
+
+run: $(TARGET.COM)
+	$(DOSBOX) $(DOSBOX_OPTS) $^
+
+dosbox:  $(TARGET.COM)
+	$(DOSBOX) $(DOSBOX_OPTS) -c "mount c: ." -c "c:"
+
+debug: $(TARGET.COM)
+	$(DOSBOX) $(DOSBOX_OPTS) -c "mount c: ." -c "mount d: ../pcjr-asm-game-tools" -c "c:" -c "d:\tools\debug.com c:\$(TARGET.COM)"
+
+clean:
+	$(RM) $(TARGET.COM)
