@@ -1,18 +1,23 @@
 """Tools for working with raw interleaved color and depth images for fosquest
 for the IBM PCjr.
-
-pack: Given 2 PNG images (color and depth), outputs a raw interleaved ('packed')
-file with extension .bin, suitable for loading into the fosquest background buffer.
-
-unpack: Given a packed image and an output name, unpacks the image and saves the
-resulting color and depth images as [name].color.png and [name].depth.png
 """
 
-import click
-
-from PIL import Image
+import os
 import typing
-from imgtools.palettetools import pil_palette, cga16
+
+import click
+from PIL import Image
+
+from imgtools.palettetools import cga16, pil_palette
+
+
+def change_ext(option_name: str, ext: str):
+    return (
+        os.path.splitext(
+            click.get_current_context().params.get(option_name, None).name
+        )[0]
+        + ".bin"
+    )
 
 
 @click.group()
@@ -23,9 +28,23 @@ def cli():
 @cli.command()
 @click.option("-c", "--color", type=click.File("rb"), required=True)
 @click.option("-d", "--depth", type=click.File("rb"), required=True)
-@click.argument("output", type=click.File("wb"))
-def pack(color: typing.IO, depth: typing.IO, output: typing.IO):
-    """Packs color and depth images into a packed image file saved as OUTPUT. COLOR and DEPTH mus
+@click.option(
+    "-o",
+    "--output",
+    type=str,
+    default=lambda: change_ext("color", "bin"),
+    show_default="[color].bin",
+    prompt=True,
+)
+@click.option(
+    "-f",
+    "--force",
+    is_flag=True,
+    help="Overwrite the existing output file",
+    default=False,
+)
+def pack(color: typing.IO, depth: typing.IO, output: str, force: bool):
+    """Packs color and depth images into a packed image file saved as OUTPUT. COLOR and DEPTH must
     be indexed PNG files using the 16-color CGA palette. OUTPUT will be a binary file, one byte per
     pixel, with depth as the upper 4 bits and color as the lower 4 bits."""
 
@@ -41,12 +60,16 @@ def pack(color: typing.IO, depth: typing.IO, output: typing.IO):
     ):
         raise "Color and depth files must both be 16-color indexed PNGs"
 
-    output.write(
-        bytes(
-            (d << 4) | (c & 0xF)
-            for d, c in zip(list(dimg.getdata()), list(cimg.getdata()))
+    if os.path.exists(output) and not force:
+        print(f"Error: Refusing to overwrite {output}. Pass -f to force.")
+
+    with open(output, "wb") as f:
+        f.write(
+            bytes(
+                (d << 4) | (c & 0xF)
+                for d, c in zip(list(dimg.getdata()), list(cimg.getdata()))
+            )
         )
-    )
 
 
 @cli.command()
@@ -70,6 +93,37 @@ def unpack(input: typing.IO, output: str):
 
     depth.save(f"{output}.depth.png")
     color.save(f"{output}.color.png")
+
+
+@cli.command()
+@click.argument("icon", type=click.File("rb"))
+@click.option(
+    "-o",
+    "--output",
+    type=str,
+    default=lambda: change_ext("icon", "bin"),
+    show_default="[icon].bin",
+    prompt=True,
+)
+@click.option(
+    "-f",
+    "--force",
+    is_flag=True,
+    help="Overwrite the existing output file",
+    default=False,
+)
+def packicon(icon: typing.IO, output: str, force: bool):
+    if os.path.exists(output) and not force:
+        print(f"Error: Refusing to overwrite {output}. Pass -f to force.")
+
+    img = Image.open(icon)
+
+    if len(img.palette.colors) != 16:
+        raise Exception("Icon file must be a 16-color indexed PNG")
+
+    with open(output, "wb") as f:
+        d = list(img.getdata())
+        f.write(bytes((a << 4) | (b & 0xF) for a, b in zip(d[::2], d[1::2])))
 
 
 if __name__ == "__main__":
