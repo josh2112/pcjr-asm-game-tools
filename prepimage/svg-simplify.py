@@ -1,13 +1,24 @@
-import bs4
-from PIL import Image, ImageQt
-#from PyQt5 import QtWidgets, QtGui, QtCore
-import argparse, os, re, logging
-import palettetools, svgtools, drawingtools#, qttools
+# from PyQt5 import QtWidgets, QtGui, QtCore
+import argparse
+import logging
+import os
+import re
 
-def figure_from_tag( tag, offset ):
-    if tag.name == 'path': return svgtools.Path( tag, offset )
-    elif tag.name == 'rect': return svgtools.Rect( tag, offset )
-    else: raise Exception( "Don't know how to handle tag", tag.name )
+import bs4
+import drawingtools
+import palettetools  # , qttools
+import svgtools
+from PIL import Image, ImageQt
+
+
+def figure_from_tag(tag, offset):
+    if tag.name == "path":
+        return svgtools.Path(tag, offset)
+    elif tag.name == "rect":
+        return svgtools.Rect(tag, offset)
+    else:
+        raise Exception("Don't know how to handle tag", tag.name)
+
 
 """
 class SVGSimplifyWindow( QtWidgets.QWidget ):
@@ -45,64 +56,68 @@ class SVGSimplifyWindow( QtWidgets.QWidget ):
 # - Write Python script to render the simple serialized format to make sure it works
 # - Further optimize by removing empty lines and combining adjacent lines with the same slope
 
-if __name__ == '__main__':
-    #logging.basicConfig( level=logging.INFO )
+if __name__ == "__main__":
+    # logging.basicConfig( level=logging.INFO )
 
-    parser = argparse.ArgumentParser( description='Convert an SVG file into a simplified vector format' )
-    parser.add_argument( 'svgpath', type=argparse.FileType('rb'), help='path to SVG file' )
+    parser = argparse.ArgumentParser(
+        description="Convert an SVG file into a simplified vector format"
+    )
+    parser.add_argument(
+        "svgpath", type=argparse.FileType("rb"), help="path to SVG file"
+    )
     args = parser.parse_args()
 
-    img = Image.new( 'P', (160,168), 15 )
-    img.putpalette( palettetools.pil_palette( palettetools.cga16 ))
+    img = Image.new("P", (160, 168), 15)
+    img.putpalette(palettetools.pil_palette(palettetools.cga16))
 
-    img2 = Image.new( 'P', img.size, 15 )
-    img2.putpalette( img.getpalette())
+    img2 = Image.new("P", img.size, 15)
+    img2.putpalette(img.getpalette())
 
-    #app = QtWidgets.QApplication( [] )
-    #app.setApplicationName( os.path.basename( args.svgpath.name ) + ' - SVG Simplify' )
-    #with open( "style.qss", 'r' ) as f:
+    # app = QtWidgets.QApplication( [] )
+    # app.setApplicationName( os.path.basename( args.svgpath.name ) + ' - SVG Simplify' )
+    # with open( "style.qss", 'r' ) as f:
     #    app.setStyleSheet( f.read())
-    
-    #window = SVGSimplifyWindow()
-    #window.set_image_1( img )
-    #window.set_image_2( img )
-    #window.show()
-    #QtCore.QCoreApplication.processEvents()
-    
-    #def update_image_1():
+
+    # window = SVGSimplifyWindow()
+    # window.set_image_1( img )
+    # window.set_image_2( img )
+    # window.show()
+    # QtCore.QCoreApplication.processEvents()
+
+    # def update_image_1():
     #    window.set_image_1( img )
     #    QtCore.QCoreApplication.processEvents()
 
-    simplifier = drawingtools.SVGSimplifier( img, None, False )# img, update_image_1, False )
+    simplifier = drawingtools.SVGSimplifier(img, None)  # img, update_image_1, False )
 
-    soup = bs4.BeautifulSoup( args.svgpath, 'html.parser' )
-    layer = soup.select( '#layer1' )[0]
-    offset = svgtools.get_transform( layer )
-    logging.info( "OFFSET %s", offset )
+    soup = bs4.BeautifulSoup(args.svgpath, "html.parser")
+    layer = soup.select("#layer1")[0]
+    offset = svgtools.get_transform(layer)
+    logging.info("OFFSET %s", offset)
 
-    alltags = layer.find_all( True, recursive=False )
-    #alltags = [t for t in alltags if t['id'] in ('path4605')]
+    alltags = layer.find_all(True, recursive=False)
+    # alltags = [t for t in alltags if t['id'] in ('path4605')]
 
-    polys = [t for t in alltags if 'fill:none' not in t['style']]
-    lines = [t for t in alltags if 'fill:none' in t['style']]
-    
-    for tag in reversed( polys ):
-        simplifier.render( figure_from_tag( tag, offset ))
+    polys = [t for t in alltags if "fill:none" not in t["style"]]
+    lines = [t for t in alltags if "fill:none" in t["style"]]
+
+    for tag in reversed(polys):
+        simplifier.render(figure_from_tag(tag, offset))
 
     for tag in lines:
-        simplifier.render( figure_from_tag( tag, offset ))
+        simplifier.render(figure_from_tag(tag, offset))
 
-    #update_image_1()
-    #img.save( "test.png" )
-    
+    # update_image_1()
+    # img.save( "test.png" )
+
     simplifier.clean()
 
-    renderer = drawingtools.SimpleSVGRenderer( img2 )
-    renderer.render( simplifier.cmds )
-    
-    #window.set_image_2( img2 )
-    
-    #app.exec_()
+    renderer = drawingtools.SimpleSVGRenderer(img2)
+    renderer.render(simplifier.cmds)
+
+    # window.set_image_2( img2 )
+
+    # app.exec_()
 
     img.show()
     img2.show()

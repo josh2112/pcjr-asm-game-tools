@@ -1,0 +1,1 @@
+..\..\dosbox\dosbox.exe -conf build-test.dosbox.conf
