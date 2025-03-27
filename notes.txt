@@ -8,7 +8,8 @@ Video pages: 16k chunks numbered from 0 starting at 00000, 04000, 08000, 0C000, 
  - 32k modes use 2 pages, so valid pages are 2, 4, 6
  - Page 6 (0x18000 to 0x1FFFF) seems to be initial CRT page
 
-0x3A080: This appears to be the whole frame but with different colors.  Bonus: Skeleton lines drawn in?
+0x3A080:0x40980: This is the combined color and depth image, 1 byte per pixel, where the high byte is depth and the
+low byte is color. Size is 160x168 (height != 200 because bottom 32 rows are text)
 
 Resources:
 http://stanislavs.org/helppc/int_10.html
