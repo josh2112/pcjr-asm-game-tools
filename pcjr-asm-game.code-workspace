@@ -9,8 +9,8 @@
             "name": "Current"
         },
         {
-            "path": "../pcjr-asm-game-future",
-            "name": "Future"
+            "path": "../pcjr-asm-game-vectordrawing",
+            "name": "Vector"
         }
     ]
 }
