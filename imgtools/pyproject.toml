@@ -1,5 +1,5 @@
 [project]
-name = "pcjr-asm-game-tools"
+name = "imgtools"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
@@ -11,3 +11,10 @@ dependencies = [
     "pillow>=11.1.0",
     "pyserial>=3.5",
 ]
+
+[project.scripts]
+imgtools = "imgtools:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

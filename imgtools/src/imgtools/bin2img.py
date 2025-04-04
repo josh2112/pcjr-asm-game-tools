@@ -1,6 +1,6 @@
 from itertools import zip_longest
 
-from palettetools import cga16, pil_palette
+from .palettetools import cga16, pil_palette
 from PIL import Image
 
 

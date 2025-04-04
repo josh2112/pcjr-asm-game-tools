@@ -8,7 +8,7 @@ import typing
 import click
 from PIL import Image
 
-from imgtools.palettetools import cga16, pil_palette
+from .palettetools import cga16, pil_palette
 
 
 def change_ext(option_name: str, ext: str):
@@ -126,5 +126,5 @@ def packicon(icon: typing.IO, output: str, force: bool):
         f.write(bytes((a << 4) | (b & 0xF) for a, b in zip(d[::2], d[1::2])))
 
 
-if __name__ == "__main__":
+def main() -> None:
     cli()

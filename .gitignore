@@ -11,6 +11,6 @@ prepimage/test.png
 dosbox/
 
 # Ignore all disk images and folders here, but keep the scripts and exes
-tools/floppyimages/*
-!tools/floppyimages/*.sh
-!tools/floppyimages/*.exe
+floppyimages/*
+!floppyimages/*.sh
+!floppyimages/*.exe
