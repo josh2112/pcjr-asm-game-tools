@@ -57,16 +57,15 @@ if [[ -e "$OUTPUT" ]]; then
     fi
 fi
 
-echo "Creating image file $OUTPUT"
-./netdrive_windows_amd64.exe create floppy 360 "$OUTPUT"
+dd if=/dev/zero of="$OUTPUT" bs=1K count=360
+mkfs.fat -F12 "$OUTPUT"
 
 sudo mkdir -p "/mnt/$IMGNAME"
 
-sudo mount $OUTPUT "/mnt/$IMGNAME"
-echo "Mounted $OUTPUT at /mnt/$IMGNAME"
+sudo mount "$OUTPUT" "/mnt/$IMGNAME"
 
-echo "Copying contents of $FILESPATH to image..."
 sudo cp -vr "$FILESPATH"/* "/mnt/$IMGNAME"
 
 sudo umount "/mnt/$IMGNAME"
-echo "Unmounted $OUTPUT"
+
+echo "Created $OUTPUT"
