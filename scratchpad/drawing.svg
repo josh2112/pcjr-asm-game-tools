@@ -49,11 +49,19 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
+<<<<<<< HEAD
      inkscape:zoom="4"
      inkscape:cx="57.5"
      inkscape:cy="-49.375"
      inkscape:document-units="px"
      inkscape:current-layer="g972"
+=======
+     inkscape:zoom="2"
+     inkscape:cx="364.5"
+     inkscape:cy="-68.25"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+>>>>>>> 6410369fb7d461c6fb5be3928ca1dff9a3588d7b
      showgrid="false"
      showguides="true"
      inkscape:guide-bbox="true"
@@ -210,7 +218,11 @@
          height="2.7946613"
          width="5.2916665"
          id="rect850"
+<<<<<<< HEAD
          style="opacity:1;fill:#bbbbbb;fill-opacity:1;stroke:none;stroke-width:3.84557" />
+=======
+         style="opacity:1;fill:#999999;fill-opacity:1;stroke:none;stroke-width:3.84557" />
+>>>>>>> 6410369fb7d461c6fb5be3928ca1dff9a3588d7b
       <rect
          style="opacity:1;fill:#cccccc;fill-opacity:1;stroke:none;stroke-width:3.84557"
          id="rect852"
