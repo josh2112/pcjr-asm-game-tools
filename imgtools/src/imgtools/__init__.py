@@ -8,6 +8,7 @@ import typing
 import click
 from PIL import Image
 
+from .bin2img import data2img
 from .palettetools import cga16, pil_palette
 
 
@@ -124,6 +125,25 @@ def packicon(icon: typing.IO, output: str, force: bool):
     with open(output, "wb") as f:
         d = list(img.getdata())
         f.write(bytes((a << 4) | (b & 0xF) for a, b in zip(d[::2], d[1::2])))
+
+
+@cli.command()
+@click.argument("input", type=click.File("rb"))
+@click.argument("offset", type=str)
+@click.argument("length", type=str)
+def mem2bin(input: typing.IO, offset: str, length: str):
+    """Extracts a memory region from a binary file. INPUT is the binary file, OFFSET is the offset to
+    start extracting from, and LEN is the number of bytes to extract."""
+
+    offset, length = int(offset, base=16), int(length, base=16)
+
+    # KQ1 cracked version:
+    # - 453c0: interleaved depth and color are seemingly being drawn at the same time?
+
+    with open(input.name, "rb") as f:
+        f.seek(offset)
+        data = f.read(length)
+        data2img(data, 160, length // 160)
 
 
 def main() -> None:

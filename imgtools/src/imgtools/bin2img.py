@@ -1,7 +1,8 @@
 from itertools import zip_longest
 
-from .palettetools import cga16, pil_palette
 from PIL import Image
+
+from .palettetools import cga16, pil_palette
 
 
 def to_rows(data, row_width):
@@ -29,6 +30,13 @@ def bitplanes2img(b1, b2, b3, b4, w, h):
     img.show()
 
 
+def data2img(data, w, h):
+    img = Image.new("P", (w, h))
+    img.putpalette(pil_palette(cga16))
+    img.putdata([d >> 4 for d in data])
+    img.show()
+
+
 def videomem2img(region, w, h):
     bitplanes2img(
         region[:8000],
@@ -48,15 +56,3 @@ def interleaved2img(region, w, h, mask):
 
     img.putdata([mask(b) for b in region])
     img.show()
-
-
-with open("../scratchpad/memdump-castle.bin", "rb") as f:
-    data = f.read()
-
-# videomem2img(data[0x18000:], 160, 200)
-
-# Color buffer
-interleaved2img(data[0x3A080:], 160, 168, lambda b: b & 0xF)
-
-# Depth buffer
-interleaved2img(data[0x3A080:], 160, 168, lambda b: b >> 4)
